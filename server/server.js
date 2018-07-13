@@ -2,11 +2,12 @@ var express = require('express');
 var bodyParser = require('body-parser');
 
 var {mongoose} = require('./db/mongoose.js');
+const {ObjectID} = require('mongodb');
 var {Todo} = require('./models/todo.js');
-var {User} = require('./models/users.js');
+var {User} = require('./models/user.js');
 
 var app = express();
-
+const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 app.post('/todos',(req,res)=>{
@@ -20,6 +21,7 @@ app.post('/todos',(req,res)=>{
   });
 });
 
+
 app.get('/todos',(req,res)=>{
   Todo.find().then((todos)=>{
     res.send({
@@ -29,8 +31,28 @@ app.get('/todos',(req,res)=>{
     res.send(400).send(e);
   });
 });
-app.listen(3000, ()=>{
-  console.log("started on port 3000");
+
+app.get('/todos/:id', (req,res)=>{
+  var id = req.params.id;
+
+  if(!ObjectID.isValid(id)){
+    res.status(404).send();
+  }else{
+    Todo.findById(id).then((todo)=>{
+      if(todo){
+        res.send({todo});
+      }else{
+        res.status(404).send();
+      }
+    }).catch((e)=>{
+      res.status(404).send();
+    });
+  }
+
+});
+
+app.listen(port, ()=>{
+  console.log("started on port "+ port);
 });
 
 module.exports = {
